@@ -1,69 +1,104 @@
 class WebTablesPage {
   url = '/webtables';
 
-  visit() { cy.visit(this.url); }
-
-  // Buttons
-  get addButton() { return cy.get('#addNewRecordButton'); }
-  get submitButton() { return cy.get('#submit'); }
-  get deleteButtons() { return cy.get('[title="Delete"]'); }
-  get rows() { return cy.get('.rt-tbody .rt-tr-group'); }
-  get searchField() { return cy.get('#searchBox'); }
-  get paginationNext() { return cy.get('.-next'); }
-  get paginationPrev() { return cy.get('.-previous'); }
-  get rowsPerPage() { return cy.get('select[aria-label="rows per page"]'); }
-
-  // Form fields
-  get firstNameField() { return cy.get('#firstName'); }
-  get lastNameField() { return cy.get('#lastName'); }
-  get emailField() { return cy.get('#userEmail'); }
-  get ageField() { return cy.get('#age'); }
-  get salaryField() { return cy.get('#salary'); }
-  get departmentField() { return cy.get('#department'); }
-
-  // Actions
-  addNewWorker(worker) {
-    this.addButton.click();
-    this.firstNameField.type(worker.firstName);
-    this.lastNameField.type(worker.lastName);
-    this.emailField.type(worker.email);
-    this.ageField.type(worker.age);
-    this.salaryField.type(worker.salary);
-    this.departmentField.type(worker.department);
-    this.submitButton.click();
+  visit() {
+    cy.visit(this.url);
   }
 
-  deleteWorkerByIndex(index) { this.deleteButtons.eq(index).click(); }
+  // Buttons
+  clickAddButton() {
+    cy.get('#addNewRecordButton').click();
+  }
+
+  submitForm() {
+    cy.get('#submit').click();
+  }
+
+  get deleteButtons() {
+    return cy.get('[title="Delete"]');
+  }
+
+  get rows() {
+    return cy.get('.rt-tbody .rt-tr-group');
+  }
+
+  get searchField() {
+    return cy.get('#searchBox');
+  }
+
+  // Form fields
+  get firstNameField() {
+    return cy.get('#firstName');
+  }
+
+  get lastNameField() {
+    return cy.get('#lastName');
+  }
+
+  get emailField() {
+    return cy.get('#userEmail');
+  }
+
+  get ageField() {
+    return cy.get('#age');
+  }
+
+  get salaryField() {
+    return cy.get('#salary');
+  }
+
+  get departmentField() {
+    return cy.get('#department');
+  }
+
+  // Actions
+  fillEmployeeForm(worker) {
+    this.firstNameField.clear().type(worker.firstName);
+    this.lastNameField.clear().type(worker.lastName);
+    this.emailField.clear().type(worker.email);
+    this.ageField.clear().type(worker.age);
+    this.salaryField.clear().type(worker.salary);
+    this.departmentField.clear().type(worker.department);
+  }
+
+  deleteRowByEmail(email) {
+    this.getRowData(email).find('[title="Delete"]').click();
+  }
 
   deleteAllRows() {
-    this.rows.each(($row) => {
-      cy.wrap($row).find('[title="Delete"]').click();
+    this.rows.then(($rows) => {
+      if ($rows.length > 0) {
+        cy.wrap($rows[0]).find('[title="Delete"]').click();
+        this.deleteAllRows(); // recursive deletion
+      }
     });
   }
 
-  searchWorker(value) {
+  search(value) {
     this.searchField.clear().type(value);
   }
 
-  getRowByIndex(index) { return this.rows.eq(index); }
-
-  getRowDataByEmail(email) { return this.rows.contains(email).parent(); }
-
-  editRowByEmail(email, newData) {
-    this.getRowDataByEmail(email).find('[title="Edit"]').click();
-    this.firstNameField.clear().type(newData.firstName);
-    this.lastNameField.clear().type(newData.lastName);
-    this.emailField.clear().type(newData.email);
-    this.ageField.clear().type(newData.age);
-    this.salaryField.clear().type(newData.salary);
-    this.departmentField.clear().type(newData.department);
-    this.submitButton.click();
+  getRowData(email) {
+    return this.rows.contains(email).parents('.rt-tr-group');
   }
 
-  setRowsPerPage(number) { this.rowsPerPage.select(`${number}`); }
+  editRowByEmail(email) {
+    this.search(email);
+    this.getRowData(email).find('[title="Edit"]').click();
+  }
 
-  nextPage() { this.paginationNext.click(); }
-  previousPage() { this.paginationPrev.click(); }
+  // Pagination
+  setRowsPerPage(count) {
+    cy.get('select[aria-label="rows per page"]').select(count.toString());
+  }
+
+  nextPage() {
+    cy.get('button[aria-label="Next"]').click();
+  }
+
+  previousPage() {
+    cy.get('button[aria-label="Previous"]').click();
+  }
 }
 
 export default WebTablesPage;
